@@ -12,6 +12,7 @@ import GuidePage from '@/components/Guide';
 import Testimonials from '@/components/testimonials';
 import Service from '@/components/Ourservices';
 import Contact from '@/components/Contact';
+import AuthProtectedSection from '@/components/AuthProtectedContent';
 // import Footer from "../../Components/Footer";
 
 
@@ -21,19 +22,35 @@ function App() {
       <Navbar />
       <main>
         <Hero />
-        <Features />
-        <Partners />
-        {/* <Services /> */}
-        {/* <Testimonials /> */}
-        {/* <CTA /> */}
-         <GuidePage/>
-    <Service/> 
-    <Testimonials/>
-    <Contact/>
+        
+        <AuthProtectedSection requireAuth={true}>
+          <Features />
+        </AuthProtectedSection>
+        
+        <AuthProtectedSection requireAuth={true}>
+          <Partners />
+        </AuthProtectedSection>
+        
+        <AuthProtectedSection requireAuth={true}>
+          <GuidePage/>
+        </AuthProtectedSection>
+        
+        <AuthProtectedSection requireAuth={true}>
+          <Service/> 
+        </AuthProtectedSection>
+        
+        <AuthProtectedSection requireAuth={true}>
+          <Testimonials/>
+        </AuthProtectedSection>
+        
+        <AuthProtectedSection requireAuth={true}>
+          <Contact/>
+        </AuthProtectedSection>
 
-    <Footer/>
+        <AuthProtectedSection requireAuth={true}>
+          <Footer/>
+        </AuthProtectedSection>
       </main>
-      {/* <Footer /> */}
     </div>
   );
 }

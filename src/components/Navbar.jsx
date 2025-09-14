@@ -1,10 +1,33 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Briefcase } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { user, signInWithGoogle, logout } = useAuth();
+
+  const handleGetStarted = async () => {
+    try {
+      if (user) {
+        // If user is already logged in, redirect to Google Form
+        window.open(process.env.NEXT_PUBLIC_GOOGLE_FORM_URL || 'https://forms.gle/B15a3mZqYEL6saRA8', '_blank');
+      } else {
+        // If not logged in, trigger Google authentication
+        const userResult = await signInWithGoogle();
+        if (userResult) {
+          // After successful authentication, redirect to Google Form
+          setTimeout(() => {
+            window.open(process.env.NEXT_PUBLIC_GOOGLE_FORM_URL || 'https://forms.gle/B15a3mZqYEL6saRA8', '_blank');
+          }, 1000); // Small delay to ensure auth state is updated
+        }
+      }
+    } catch (error) {
+      console.error('Authentication error:', error);
+      alert('Authentication failed. Please try again.');
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -40,22 +63,46 @@ const Navbar = () => {
             <a href="#" className="text-white/80 hover:text-white transition-colors text-sm font-medium">
               Home
             </a>
-            <a href="#about" className="text-white/80 hover:text-white transition-colors text-sm font-medium">
-              About Us
-            </a>
-            <a href="#job" className="text-white/80 hover:text-white transition-colors text-sm font-medium">
-              Job List
-            </a>
-            <a href="#contact" className="text-white/80 hover:text-white transition-colors text-sm font-medium">
-              Contact Us
-            </a>
+            {user && (
+              <>
+                <a href="#about" className="text-white/80 hover:text-white transition-colors text-sm font-medium">
+                  About Us
+                </a>
+                <a href="#job" className="text-white/80 hover:text-white transition-colors text-sm font-medium">
+                  Job List
+                </a>
+                <a href="#contact" className="text-white/80 hover:text-white transition-colors text-sm font-medium">
+                  Contact Us
+                </a>
+              </>
+            )}
           </nav>
 
-          {/* CTA Button */}
-          <a href='https://forms.gle/B15a3mZqYEL6saRA8'><button className="hidden md:block bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-6 py-2.5 rounded-full transition-all duration-300 font-medium text-sm shadow-lg hover:shadow-primary-500/25">
-            Get Started
-          </button>
-          </a>
+          {/* User Profile and Actions */}
+          <div className="hidden md:flex items-center space-x-4">
+            {user && (
+              <div className="flex items-center space-x-3">
+                <span className="text-white text-sm">{user.displayName}</span>
+              </div>
+            )}
+            
+            {user && (
+              <button
+                onClick={logout}
+                className="text-white/80 hover:text-white transition-colors text-sm font-medium px-3 py-1 rounded-full border border-white/20 hover:bg-white/10"
+              >
+                Logout
+              </button>
+            )}
+            
+            {/* CTA Button */}
+            <button 
+              onClick={handleGetStarted}
+              className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-6 py-2.5 rounded-full transition-all duration-300 font-medium text-sm shadow-lg hover:shadow-primary-500/25"
+            >
+              {user ? 'Apply Now' : 'Get Started'}
+            </button>
+          </div>
 
           {/* Mobile Menu Button */}
           <button
@@ -77,32 +124,57 @@ const Navbar = () => {
               >
                 Home
               </a>
-              <a
-                href="#about"
-                className="text-white/80 hover:text-white transition-colors text-sm font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                About Us
-              </a>
-              <a
-                href="#job"
-                className="text-white/80 hover:text-white transition-colors text-sm font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Job List
-              </a>
               
-              <a
-                href="#contact"
-                className="text-white/80 hover:text-white transition-colors text-sm font-medium"
-                onClick={() => setIsMenuOpen(false)}
+              {user && (
+                <>
+                  <a
+                    href="#about"
+                    className="text-white/80 hover:text-white transition-colors text-sm font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    About Us
+                  </a>
+                  <a
+                    href="#job"
+                    className="text-white/80 hover:text-white transition-colors text-sm font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Job List
+                  </a>
+                  <a
+                    href="#contact"
+                    className="text-white/80 hover:text-white transition-colors text-sm font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Contact Us
+                  </a>
+                </>
+              )}
+
+              {user && (
+                <div className="flex items-center space-x-3 py-2 border-t border-white/10 mt-4 pt-4">
+                  <span className="text-white text-sm">{user.displayName}</span>
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      logout();
+                    }}
+                    className="text-white/80 hover:text-white transition-colors text-sm font-medium px-3 py-1 rounded-full border border-white/20 hover:bg-white/10"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+              
+              <button 
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  handleGetStarted();
+                }}
+                className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-6 py-2.5 rounded-full transition-all duration-300 font-medium text-sm shadow-lg hover:shadow-primary-500/25 w-fit"
               >
-                Contact Us
-              </a>
-              <a href='https://forms.gle/B15a3mZqYEL6saRA8'><button className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-6 py-2.5 rounded-full transition-all duration-300 font-medium text-sm shadow-lg hover:shadow-primary-500/25 w-fit">
-                Get Started
+                {user ? 'Apply Now' : 'Get Started'}
               </button>
-              </a>
             </nav>
           </div>
         )}
