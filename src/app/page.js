@@ -21,35 +21,13 @@ function App() {
     <div className="min-h-screen bg-white font-jost">
       <Navbar />
       <main>
-        <Hero />
-        
-        <AuthProtectedSection requireAuth={true}>
+          <Hero />
           <Features />
-        </AuthProtectedSection>
-        
-        <AuthProtectedSection requireAuth={true}>
           <Partners />
-        </AuthProtectedSection>
-        
-        <AuthProtectedSection requireAuth={true}>
           <GuidePage/>
-        </AuthProtectedSection>
-        
-        <AuthProtectedSection requireAuth={true}>
-          <Service/> 
-        </AuthProtectedSection>
-        
-        <AuthProtectedSection requireAuth={true}>
           <Testimonials/>
-        </AuthProtectedSection>
-        
-        <AuthProtectedSection requireAuth={true}>
-          <Contact/>
-        </AuthProtectedSection>
-
-        <AuthProtectedSection requireAuth={true}>
           <Footer/>
-        </AuthProtectedSection>
+      
       </main>
     </div>
   );

@@ -2,24 +2,25 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Briefcase } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-
+import { usePathname } from 'next/navigation';
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, signInWithGoogle, logout } = useAuth();
+  const pathname = usePathname();
 
   const handleGetStarted = async () => {
     try {
       if (user) {
-        // If user is already logged in, redirect to Google Form
-        window.open(process.env.NEXT_PUBLIC_GOOGLE_FORM_URL || 'https://forms.gle/B15a3mZqYEL6saRA8', '_blank');
+        // If user is already logged in, redirect to internal job form
+        window.location.href = '/job-form';
       } else {
         // If not logged in, trigger Google authentication
         const userResult = await signInWithGoogle();
         if (userResult) {
-          // After successful authentication, redirect to Google Form
+          // After successful authentication, redirect to internal job form
           setTimeout(() => {
-            window.open(process.env.NEXT_PUBLIC_GOOGLE_FORM_URL || 'https://forms.gle/B15a3mZqYEL6saRA8', '_blank');
+            window.location.href = '/job-form';
           }, 1000); // Small delay to ensure auth state is updated
         }
       }
@@ -55,7 +56,7 @@ const Navbar = () => {
           {/* Logo */}
           <div className="flex items-center">
             {/* <img src='/logox.png' height={50} width={50} className='bg-'></img> */}
-            <span className="ml-2 text-xl font-bold text-white">HireLyft</span>
+            <span className="ml-2 text-xl font-bold text-white">Job BotX</span>
           </div>
 
           {/* Desktop Navigation */}
@@ -63,45 +64,53 @@ const Navbar = () => {
             <a href="#" className="text-white/80 hover:text-white transition-colors text-sm font-medium">
               Home
             </a>
-            {user && (
-              <>
+           
+              
                 <a href="#about" className="text-white/80 hover:text-white transition-colors text-sm font-medium">
                   About Us
                 </a>
-                <a href="#job" className="text-white/80 hover:text-white transition-colors text-sm font-medium">
+                {/* <a href="#job" className="text-white/80 hover:text-white transition-colors text-sm font-medium">
                   Job List
-                </a>
-                <a href="#contact" className="text-white/80 hover:text-white transition-colors text-sm font-medium">
+                </a> */}
+                {/* <a href="#contact" className="text-white/80 hover:text-white transition-colors text-sm font-medium">
                   Contact Us
-                </a>
-              </>
-            )}
+                </a> */}
+        
           </nav>
 
           {/* User Profile and Actions */}
           <div className="hidden md:flex items-center space-x-4">
             {user && (
-              <div className="flex items-center space-x-3">
-                <span className="text-white text-sm">{user.displayName}</span>
+              <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">
+                    {user.displayName?.charAt(0)?.toUpperCase() || 'U'}
+                  </span>
+                </div>
+                <span className="text-white text-sm font-medium">
+                  Welcome, {user.displayName?.split(' ')[0] || 'User'}
+                </span>
               </div>
             )}
             
             {user && (
               <button
                 onClick={logout}
-                className="text-white/80 hover:text-white transition-colors text-sm font-medium px-3 py-1 rounded-full border border-white/20 hover:bg-white/10"
+                className="text-white/80 hover:text-white transition-colors text-sm font-medium px-4 py-2 rounded-full border border-white/20 hover:bg-white/10 backdrop-blur-sm"
               >
                 Logout
               </button>
             )}
             
-            {/* CTA Button */}
-            <button 
-              onClick={handleGetStarted}
-              className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-6 py-2.5 rounded-full transition-all duration-300 font-medium text-sm shadow-lg hover:shadow-primary-500/25"
-            >
-              {user ? 'Apply Now' : 'Get Started'}
-            </button>
+            {/* CTA Button - Hide on form page */}
+            {pathname !== '/job-form' && (
+              <button 
+                onClick={handleGetStarted}
+                className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-6 py-2.5 rounded-full transition-all duration-300 font-medium text-sm shadow-lg hover:shadow-primary-500/25"
+              >
+                {user ? 'Apply Now' : 'Get Started'}
+              </button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -152,8 +161,17 @@ const Navbar = () => {
               )}
 
               {user && (
-                <div className="flex items-center space-x-3 py-2 border-t border-white/10 mt-4 pt-4">
-                  <span className="text-white text-sm">{user.displayName}</span>
+                <div className="flex items-center justify-between py-3 border-t border-white/10 mt-4 pt-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm font-bold">
+                        {user.displayName?.charAt(0)?.toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                    <span className="text-white text-sm font-medium">
+                      {user.displayName?.split(' ')[0] || 'User'}
+                    </span>
+                  </div>
                   <button
                     onClick={() => {
                       setIsMenuOpen(false);
@@ -166,15 +184,17 @@ const Navbar = () => {
                 </div>
               )}
               
-              <button 
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  handleGetStarted();
-                }}
-                className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-6 py-2.5 rounded-full transition-all duration-300 font-medium text-sm shadow-lg hover:shadow-primary-500/25 w-fit"
-              >
-                {user ? 'Apply Now' : 'Get Started'}
-              </button>
+              {pathname !== '/job-form' && (
+                <button 
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    handleGetStarted();
+                  }}
+                  className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-6 py-2.5 rounded-full transition-all duration-300 font-medium text-sm shadow-lg hover:shadow-primary-500/25 w-fit"
+                >
+                  {user ? 'Apply Now' : 'Get Started'}
+                </button>
+              )}
             </nav>
           </div>
         )}

@@ -9,11 +9,11 @@ export default function Footer() {
         {/* Company Info */}
         <div>
           <div className="flex items-center gap-3 mb-5">
-            <div className="text-green-400 text-3xl font-bold">🛍️</div>
-            <h2 className="text-2xl font-semibold">HireLyft</h2>
+            <div className="text-green-400 text-3xl font-bold">🤖</div>
+            <h2 className="text-2xl font-semibold">Job BotX</h2>
           </div>
           <p className="text-sm text-gray-300 leading-relaxed">
-         Connecting students with quality virtual internships to build skills and boost careers—anytime, anywhere.
+         Revolutionizing job search with AI-powered automation. Upload your resume, get personalized LinkedIn job matches delivered to your inbox as organized Excel reports.
           </p>
           <div className="flex gap-6 mt-6 text-gray-300 text-3xl">
             {/* <FaTwitter className="hover:text-[#1DA1F2] transition duration-300 cursor-pointer" /> */}
@@ -33,7 +33,7 @@ export default function Footer() {
 
           <h4 className="mt-6 text-lg font-semibold">Contact</h4>
           {/* <p className="text-sm text-gray-300"></p> */}
-          <p className="text-sm text-gray-300">services.hirelyft@gmail.com</p>
+          <p className="text-sm text-gray-300">support@jobbotx.com</p>
         </div>
 
         {/* Navigation */}
@@ -41,18 +41,18 @@ export default function Footer() {
           <h3 className="text-lg font-semibold mb-4">Navigation</h3>
           <ul className="space-y-3 text-sm text-gray-300">
             <li className="hover:text-white cursor-pointer transition">Home</li>
-            <li className="hover:text-white cursor-pointer transition">About Us</li>
-            <li className="hover:text-white cursor-pointer transition">Services</li>
-            <li className="hover:text-white cursor-pointer transition">Events</li>
+            <li className="hover:text-white cursor-pointer transition">How It Works</li>
+            <li className="hover:text-white cursor-pointer transition">Job Search</li>
+            <li className="hover:text-white cursor-pointer transition">Features</li>
           </ul>
         </div>
 
         {/* Help */}
         <div>
-          <h3 className="text-lg font-semibold mb-4">Help</h3>
+          <h3 className="text-lg font-semibold mb-4">Support</h3>
           <ul className="space-y-3 text-sm text-gray-300">
             <li className="hover:text-white cursor-pointer transition">Customer Support</li>
-            <li className="hover:text-white cursor-pointer transition">How It Works</li>
+            <li className="hover:text-white cursor-pointer transition">Resume Upload Guide</li>
             <li className="hover:text-white cursor-pointer transition">Terms & Conditions</li>
             <li className="hover:text-white cursor-pointer transition">Privacy Policy</li>
           </ul>
@@ -61,9 +61,9 @@ export default function Footer() {
 
       {/* Footer Bottom */}
       <div className="border-t border-gray-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
-        <p>© 2025 HireLyft. All rights reserved.</p>
+        <p>© 2025 Job BotX. All rights reserved.</p>
         <p>
-          Designed by <span className="text-white font-medium">HireLyft</span>
+          Powered by <span className="text-white font-medium">Job BotX AI</span>
         </p>
       </div>
     </footer>

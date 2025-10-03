@@ -82,15 +82,15 @@
 import React from 'react';
 
 const partners = [
-  { name: 'Google', logo: 'https://logo.clearbit.com/google.com' },
-  { name: 'Amazon', logo: 'https://logo.clearbit.com/amazon.com' },
-  { name: 'Microsoft', logo: 'https://logo.clearbit.com/microsoft.com' },
-  { name: 'Salesforce', logo: 'https://logo.clearbit.com/salesforce.com' },
-  { name: 'Shopify', logo: 'https://logo.clearbit.com/shopify.com' },
-  { name: 'Adobe', logo: 'https://logo.clearbit.com/adobe.com' },
-  { name: 'Netflix', logo: 'https://logo.clearbit.com/netflix.com' },
-  { name: 'Zoom', logo: 'https://logo.clearbit.com/zoom.us' },
-  { name: 'Stripe', logo: 'https://logo.clearbit.com/stripe.com' },
+  { name: 'LinkedIn', logo: 'https://logo.clearbit.com/linkedin.com' },
+  { name: 'Indeed', logo: 'https://logo.clearbit.com/indeed.com' },
+  { name: 'Glassdoor', logo: 'https://logo.clearbit.com/glassdoor.com' },
+  { name: 'Monster', logo: 'https://logo.clearbit.com/monster.com' },
+  { name: 'ZipRecruiter', logo: 'https://logo.clearbit.com/ziprecruiter.com' },
+  { name: 'CareerBuilder', logo: 'https://logo.clearbit.com/careerbuilder.com' },
+  { name: 'AngelList', logo: 'https://logo.clearbit.com/angel.co' },
+  { name: 'Dice', logo: 'https://logo.clearbit.com/dice.com' },
+  { name: 'SimplyHired', logo: 'https://logo.clearbit.com/simplyhired.com' },
 ];
 
 const Partners = () => {
@@ -101,18 +101,18 @@ const Partners = () => {
           {/* Content */}
           <div>
             <h2 className="text-4xl font-extrabold text-gray-900 leading-tight mb-4">
-              Partnering in the Journey of
+              Powered by Leading
             </h2>
             <h2 className="text-4xl font-extrabold text-purple-600 mb-6">
-              2,000+ Thriving Enterprises
+              Job Platforms & Networks
             </h2>
             <p className="text-gray-700 mb-8 text-lg leading-relaxed">
-              We collaborate with industry leaders and innovative startups to offer top-tier internship opportunities for our users. 
-              Our wide network connects brilliant minds with inspiring workplaces.
+              Job BotX integrates with top job platforms and recruitment networks to fetch the most comprehensive and up-to-date job listings. 
+              Our advanced scraping technology ensures you never miss the perfect opportunity.
             </p>
 
             <div className="flex flex-wrap gap-3 mb-10">
-              {['Tech Giants', 'Startups', 'Fortune 500', 'Healthcare', 'E-commerce'].map((tag, idx) => (
+              {['LinkedIn Jobs', 'Tech Roles', 'Remote Work', 'Startups', 'Enterprise'].map((tag, idx) => (
                 <span
                   key={idx}
                   className="bg-white text-sm px-4 py-2 rounded-full shadow hover:shadow-md transition text-gray-800"

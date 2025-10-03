@@ -8,7 +8,7 @@ const testimonials = [
     name: 'Sarah Wilson',
     role: 'Software Developer',
     company: 'TechCorp',
-    content: 'TokoJobs helped me land my dream internship which turned into a full-time role. The platform is intuitive and the career guidance was invaluable.',
+    content: 'Job BotX saved me hours of manual job searching! I uploaded my resume and received 50+ relevant job matches in Excel format within 24 hours. Found my current role through their automated system.',
     rating: 5,
   },
   {
@@ -16,7 +16,7 @@ const testimonials = [
     name: 'Michael Chen',
     role: 'Marketing Specialist',
     company: 'Brand Innovators',
-    content: 'As someone transitioning careers, TokoJobs made it easy to find relevant opportunities. Their skill assessment tools helped me identify areas for growth.',
+    content: 'The automated LinkedIn job scraping is incredible. Job BotX found opportunities I never would have discovered manually. The Excel reports are perfectly organized and easy to track.',
     rating: 5,
   },
   {
@@ -24,7 +24,7 @@ const testimonials = [
     name: 'Jessica Taylor',
     role: 'UX Designer',
     company: 'Creative Solutions',
-    content: 'The quality of internships on TokoJobs is unmatched. I was able to build my portfolio and make industry connections that launched my career.',
+    content: 'No more endless scrolling through job boards! Job BotX delivers personalized matches directly to my email. The AI really understands my skills and preferences.',
     rating: 4,
   },
   {
@@ -32,7 +32,7 @@ const testimonials = [
     name: 'David Miller',
     role: 'Data Analyst',
     company: 'Insight Analytics',
-    content: 'TokoJobs connected me with companies I would have never found on my own. Their personalized recommendations were spot-on for my skills and interests.',
+    content: 'Job BotX is like having a personal job search assistant working 24/7. The quality of matches and the convenience of email delivery made my job hunt stress-free.',
     rating: 5,
   },
 ];
@@ -40,7 +40,6 @@ const testimonials = [
 const Testimonials = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const testimonialsPerPage = window.innerWidth >= 768 ? 3 : 1;
-
   const nextSlide = () => {
     setCurrentIndex((prevIndex) =>
       prevIndex + testimonialsPerPage >= testimonials.length ? 0 : prevIndex + 1
@@ -64,10 +63,10 @@ const Testimonials = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
-            Testimonials
+            Success Stories
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Hear from students and professionals who found success through our platform.
+            Discover how Job BotX transformed job searches for professionals across industries with automated LinkedIn scraping and personalized job matching.
           </p>
         </div>
 
