@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Google Apps Script Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .result { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Quick Google Apps Script Test</h1>
+    
+    <p>This will test if your Google Apps Script is working:</p>
+    
+    <button onclick="testScript()">Test Google Apps Script</button>
+    
+    <div id="result"></div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxq2yX2Edz_FFHbZ2TRJRts4mikpDIILEYWiJuCY8so0_vbVkahkcuxAQ9NKo-m75wT/exec";
+        
+        async function testScript() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '🔄 Testing Google Apps Script...';
+            
+            try {
+                console.log('Testing URL:', SCRIPT_URL);
+                
+                // Test GET request first
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'GET'
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    <h3>✅ Google Apps Script is Working!</h3>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Message:</strong> ${data.message}</p>
+                    <p><strong>Timestamp:</strong> ${data.timestamp}</p>
+                    <hr>
+                    <p>✅ Your script is accessible and responding correctly!</p>
+                    <p>🔧 Now try uploading a file in your main app.</p>
+                `;
+                
+            } catch (error) {
+                console.error('Test failed:', error);
+                
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Google Apps Script Test Failed</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <hr>
+                    <h4>🔧 Possible fixes:</h4>
+                    <ul>
+                        <li>✅ Make sure you deployed the Google Apps Script</li>
+                        <li>✅ Check the script URL is correct</li>
+                        <li>✅ Ensure the script is set to "Anyone can access"</li>
+                        <li>✅ Try redeploying as a new version</li>
+                    </ul>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

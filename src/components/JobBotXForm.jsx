@@ -1,37 +1,115 @@
 "use client";
-import React, { useState, useRef } from 'react';
-import { Upload, User, Mail, FileText, CheckCircle, ArrowRight, Bot, Sparkles, Loader2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { 
+  User, 
+  Mail, 
+  Upload, 
+  FileText, 
+  CheckCircle, 
+  Loader2, 
+  AlertCircle, 
+  X,
+  Bot,
+  Sparkles,
+  Zap,
+  Star,
+  Rocket,
+  Heart,
+  Trophy,
+  Crown,
+  Gift,
+  PartyPopper,
+  LogOut,
+  Home
+} from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 
-const JobBotXForm = () => {
-  const { user } = useAuth();
-  const [formData, setFormData] = useState({
-    name: user?.displayName || '',
-    email: user?.email || '',
-    resume: null
-  });
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+export default function ResumeUploadForm() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [file, setFile] = useState(null);
+  const [url, setUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [dragActive, setDragActive] = useState(false);
+  const [showThankYou, setShowThankYou] = useState(false);
+  const [animationStep, setAnimationStep] = useState(0);
+  const [formAnimated, setFormAnimated] = useState(false);
+  const [fieldFocus, setFieldFocus] = useState({ name: false, email: false, file: false });
+  const [userName, setUserName] = useState('');
   const fileInputRef = useRef(null);
+  const { user, logout } = useAuth();
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleFileChange = (file) => {
-    if (file && (file.type === 'application/pdf' || file.type.includes('document'))) {
-      setFormData(prev => ({
-        ...prev,
-        resume: file
-      }));
+  // Get user name and animate form on mount
+  useEffect(() => {
+    if (user) {
+      // Use Firebase user data first
+      const displayName = user.displayName || 
+                         user.email?.split('@')[0] || 
+                         localStorage.getItem('userName') || 
+                         'User';
+      
+      // Format the name properly
+      if (displayName.includes('@')) {
+        const nameFromEmail = displayName.split('@')[0];
+        const formattedName = nameFromEmail
+          .replace(/[._]/g, ' ')
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(' ');
+        setUserName(formattedName);
+      } else {
+        setUserName(displayName);
+      }
     } else {
-      alert('Please upload a PDF or document file');
+      // Fallback to localStorage
+      const storedName = localStorage.getItem('userName') || 
+                        localStorage.getItem('userEmail') || 
+                        'Guest';
+      
+      if (storedName.includes('@')) {
+        const nameFromEmail = storedName.split('@')[0];
+        const formattedName = nameFromEmail
+          .replace(/[._]/g, ' ')
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(' ');
+        setUserName(formattedName);
+      } else {
+        setUserName(storedName);
+      }
+    }
+    
+    setTimeout(() => setFormAnimated(true), 100);
+  }, [user]);
+
+  // Animation sequence for thank you page
+  useEffect(() => {
+    if (showThankYou) {
+      const timeouts = [
+        setTimeout(() => setAnimationStep(1), 500),
+        setTimeout(() => setAnimationStep(2), 1500),
+        setTimeout(() => setAnimationStep(3), 2500),
+        setTimeout(() => setAnimationStep(4), 3500),
+      ];
+      return () => timeouts.forEach(clearTimeout);
+    }
+  }, [showThankYou]);
+
+  const handleLogout = async () => {
+    try {
+      // Use Firebase logout function
+      await logout();
+      // Redirect to home page
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Fallback: clear localStorage and redirect
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userName');
+      sessionStorage.clear();
+      window.location.href = '/';
     }
   };
 
@@ -51,404 +129,442 @@ const JobBotXForm = () => {
     setDragActive(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileChange(e.dataTransfer.files[0]);
+      const droppedFile = e.dataTransfer.files[0];
+      if (validateFile(droppedFile)) {
+        setFile(droppedFile);
+      }
     }
   };
 
-  const toBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result.split(",")[1]);
-      reader.onerror = (error) => reject(error);
-    });
+  const validateFile = (file) => {
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    if (!allowedTypes.includes(file.type)) {
+      setError("Please upload only PDF, DOC, or DOCX files");
+      return false;
+    }
+    if (file.size > maxSize) {
+      setError("File size must be less than 10MB");
+      return false;
+    }
+    setError("");
+    return true;
+  };
+
+  const handleFileSelect = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile && validateFile(selectedFile)) {
+      setFile(selectedFile);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    if (!file) return alert("Please upload a file");
 
-    try {
-      // Convert file to base64
-      let resumeBase64 = "";
-      if (formData.resume) {
-        resumeBase64 = await toBase64(formData.resume);
-      }
+    setLoading(true);
 
-      const payload = {
-        Name: formData.name,
-        Gmail: formData.email,
-        ResumeFileName: formData.resume ? formData.resume.name : "",
-        ResumeType: formData.resume ? formData.resume.type : "application/pdf",
-        ResumeBase64: resumeBase64,
-        ResumeSize: formData.resume
-          ? (formData.resume.size / (1024 * 1024)).toFixed(2) + " MB"
-          : "0 MB",
-      };
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64File = reader.result.split(",")[1]; // Extract base64 data
 
-      const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbxq2yX2Edz_FFHbZ2TRJRts4mikpDIILEYWiJuCY8so0_vbVkahkcuxAQ9NKo-m75wT/exec",
-        {
-          method: "POST",
-          body: new URLSearchParams(payload),
+      const formData = new FormData();
+      formData.append("file", base64File);
+      formData.append("fileName", file.name);
+      formData.append("name", name);
+      formData.append("email", email);
+
+      try {
+        const response = await fetch(
+          "https://script.google.com/macros/s/AKfycbxtc9MoYmAuxlj3kltjn9nWWmaMwVD9dOBsrTiZ75cXAyoLp9OXJHRwXbwV_A8KPRm6/exec",
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        const result = await response.json();
+
+        if (result.url) {
+          setUrl(result.url);
+          // Redirect to thank you page
+          setTimeout(() => {
+            setShowThankYou(true);
+          }, 1000);
+        } else {
+          setError("Upload failed: " + (result.error || "Unknown error"));
         }
-      );
-
-      if (response.ok) {
-        setIsSuccess(true);
-      } else {
-        throw new Error('Submission failed');
+      } catch (err) {
+        setError("Network error: " + err.message);
       }
-      
-    } catch (error) {
-      console.error('Form submission error:', error);
-      alert('Submission failed. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+
+      setLoading(false);
+    };
+
+    reader.readAsDataURL(file);
   };
 
-  if (isSuccess) {
+  // Professional Thank You Page
+  if (showThankYou) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4 pt-20 relative overflow-hidden">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-10 left-10 w-96 h-96 bg-green-500/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-10 right-10 w-80 h-80 bg-emerald-500/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '700ms'}}></div>
-          <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-teal-500/15 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1000ms'}}></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden relative">
+        {/* Animated Background */}
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(30)].map((_, i) => (
+            <div
+              key={i}
+              className={`absolute w-1 h-1 bg-white/20 rounded-full animate-pulse ${
+                animationStep >= 1 ? 'opacity-100' : 'opacity-0'
+              }`}
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${2 + Math.random() * 3}s`
+              }}
+            />
+          ))}
+          
+          {[Sparkles, Star, Zap, Heart].map((Icon, i) => (
+            <Icon
+              key={i}
+              className={`absolute text-purple-400/30 animate-pulse ${
+                animationStep >= 2 ? 'opacity-100' : 'opacity-0'
+              }`}
+              size={16 + Math.random() * 24}
+              style={{
+                left: `${Math.random() * 95}%`,
+                top: `${Math.random() * 95}%`,
+                animationDelay: `${Math.random() * 2}s`,
+                transform: `rotate(${Math.random() * 360}deg)`
+              }}
+            />
+          ))}
         </div>
 
-        <div className="max-w-2xl w-full relative z-10">
-          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 md:p-12 text-center border border-white/20 shadow-2xl animate-scale-in">
-            
-            {/* Success Icon with Animation */}
-            <div className="relative mb-8">
-              <div className="w-24 h-24 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto animate-bounce-slow shadow-lg">
+        {/* Main Content */}
+        <div className="relative z-10 flex items-center justify-center min-h-screen px-4 py-8">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Success Icon */}
+            <div className={`mb-8 transform transition-all duration-1000 ${
+              animationStep >= 0 ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
+            }`}>
+              <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full mb-6 shadow-2xl">
                 <CheckCircle className="w-12 h-12 text-white" />
               </div>
-              {/* Ripple Effect */}
-              <div className="absolute inset-0 w-24 h-24 mx-auto rounded-full border-4 border-green-400/30 animate-ping"></div>
-              <div className="absolute inset-0 w-24 h-24 mx-auto rounded-full border-4 border-emerald-400/20 animate-ping" style={{animationDelay: '300ms'}}></div>
             </div>
 
-            {/* Thank You Message */}
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 animate-fade-in-up">
-              Thank You! 🎉
-            </h1>
-            
-            <h2 className="text-xl md:text-2xl font-semibold text-emerald-300 mb-6 animate-fade-in-up" style={{animationDelay: '200ms'}}>
-              Your Job Search is Now Active
-            </h2>
+            {/* Main Title */}
+            <div className={`mb-12 transform transition-all duration-1000 delay-300 ${
+              animationStep >= 1 ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+            }`}>
+              <h1 className="text-5xl md:text-7xl font-black text-white mb-4">
+                Success! 🎉
+              </h1>
+              <p className="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto leading-relaxed">
+                Your resume has been successfully uploaded and our AI is now analyzing it to find the perfect job matches for you.
+              </p>
+            </div>
 
-            {/* Main Message */}
-            <div className="bg-white/5 rounded-2xl p-6 mb-8 border border-white/10 animate-fade-in-up" style={{animationDelay: '400ms'}}>
-              <p className="text-white/90 text-lg mb-4 leading-relaxed">
-                🚀 <strong>Job BotX is now working for you!</strong>
-              </p>
-              <p className="text-white/80 mb-4">
-                Our AI is analyzing your resume and scraping LinkedIn for the perfect job matches based on your profile.
-              </p>
-              <div className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 rounded-xl p-4 border border-emerald-400/30">
-                <p className="text-emerald-200 font-semibold text-lg">
-                  📧 Your personalized job listings will be sent to your email in 
-                  <span className="text-emerald-300 font-bold"> 3-4 minutes</span>
+            {/* Status Cards */}
+            <div className={`grid md:grid-cols-2 gap-6 mb-12 transform transition-all duration-1000 delay-600 ${
+              animationStep >= 2 ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+            }`}>
+              {/* Processing Card */}
+              <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl">
+                <div className="flex items-center justify-center mb-4">
+                  <Bot className="w-8 h-8 text-blue-400 animate-bounce" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">AI Processing</h3>
+                <p className="text-white/70 text-sm">
+                  Our advanced AI is analyzing your resume and matching it with thousands of job opportunities.
+                </p>
+              </div>
+
+              {/* Email Card */}
+              <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl">
+                <div className="flex items-center justify-center mb-4">
+                  <Mail className="w-8 h-8 text-green-400 animate-pulse" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">Email Delivery</h3>
+                <p className="text-white/70 text-sm">
+                  Personalized job listings will be sent to your email within 2-3 minutes.
                 </p>
               </div>
             </div>
 
-            {/* Process Steps */}
-            <div className="grid md:grid-cols-3 gap-4 mb-8">
-              <div className="bg-white/5 rounded-lg p-4 animate-fade-in-up" style={{animationDelay: '600ms'}}>
-                <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-2xl">🔍</span>
-                </div>
-                <p className="text-white/80 text-sm">Analyzing Resume</p>
-                <div className="w-full bg-white/20 rounded-full h-2 mt-2">
-                  <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full animate-progress-bar"></div>
-                </div>
-              </div>
-              
-              <div className="bg-white/5 rounded-lg p-4 animate-fade-in-up" style={{animationDelay: '700ms'}}>
-                <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-2xl">🤖</span>
-                </div>
-                <p className="text-white/80 text-sm">Scraping LinkedIn</p>
-                <div className="w-full bg-white/20 rounded-full h-2 mt-2">
-                  <div className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full animate-progress-bar" style={{animationDelay: '500ms'}}></div>
-                </div>
-              </div>
-              
-              <div className="bg-white/5 rounded-lg p-4 animate-fade-in-up" style={{animationDelay: '800ms'}}>
-                <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-2xl">📊</span>
-                </div>
-                <p className="text-white/80 text-sm">Creating Excel Report</p>
-                <div className="w-full bg-white/20 rounded-full h-2 mt-2">
-                  <div className="bg-gradient-to-r from-emerald-500 to-green-500 h-2 rounded-full animate-progress-bar" style={{animationDelay: '1000ms'}}></div>
+            {/* Timeline */}
+            <div className={`mb-12 transform transition-all duration-1000 delay-900 ${
+              animationStep >= 3 ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+            }`}>
+              <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-xl rounded-2xl p-8 border border-white/20 shadow-xl">
+                <h3 className="text-2xl font-bold text-white mb-6">What happens next?</h3>
+                <div className="grid md:grid-cols-3 gap-6 text-left">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <span className="text-white font-bold text-sm">1</span>
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold mb-1">AI Analysis</h4>
+                      <p className="text-white/70 text-sm">We extract key skills and experience from your resume</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <span className="text-white font-bold text-sm">2</span>
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold mb-1">Job Matching</h4>
+                      <p className="text-white/70 text-sm">Our AI finds the best job matches on LinkedIn</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <span className="text-white font-bold text-sm">3</span>
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold mb-1">Email Delivery</h4>
+                      <p className="text-white/70 text-sm">Receive curated job listings in your inbox</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Timer Animation */}
-            <div className="bg-gradient-to-r from-emerald-600/20 to-green-600/20 rounded-2xl p-6 border border-emerald-400/30 animate-fade-in-up" style={{animationDelay: '1000ms'}}>
-              <div className="flex items-center justify-center space-x-3 mb-3">
-                <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
-                <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse" style={{animationDelay: '200ms'}}></div>
-                <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse" style={{animationDelay: '400ms'}}></div>
-              </div>
-              <p className="text-emerald-200 font-medium">
-                <Bot className="w-5 h-5 inline mr-2 animate-spin" />
-                Processing your request... Check your email shortly!
-              </p>
-            </div>
-
-            {/* Additional Info */}
-            <div className="mt-8 text-center animate-fade-in-up" style={{animationDelay: '1200ms'}}>
-              <p className="text-white/60 text-sm mb-2">
-                💡 <strong>Pro Tip:</strong> Check your spam folder if you don't see the email
-              </p>
-              <p className="text-white/60 text-sm">
-                📱 You can close this page - we'll handle the rest!
-              </p>
+            {/* Action Buttons */}
+            <div className={`flex flex-col sm:flex-row gap-4 justify-center transform transition-all duration-1000 delay-1200 ${
+              animationStep >= 4 ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+            }`}>
+              <button
+                onClick={() => {
+                  setShowThankYou(false);
+                  setAnimationStep(0);
+                  setName("");
+                  setEmail("");
+                  setFile(null);
+                  setUrl("");
+                  setError("");
+                }}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+              >
+                <Upload className="w-5 h-5" />
+                Upload Another Resume
+              </button>
+              
+              {/* Hide "Back to Home" button on mobile since logout is in header */}
+              <button
+                onClick={handleLogout}
+                className="hidden sm:flex bg-white/10 hover:bg-white/20 backdrop-blur-lg border border-white/20 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg items-center justify-center gap-2"
+              >
+                <Home className="w-5 h-5" />
+                Back to Home
+              </button>
             </div>
           </div>
         </div>
-
-        <style jsx>{`
-          @keyframes scale-in {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-          }
-          
-          @keyframes fade-in-up {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          
-          @keyframes bounce-slow {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-          }
-          
-          @keyframes progress-bar {
-            from { width: 0%; }
-            to { width: 100%; }
-          }
-          
-          .animate-scale-in {
-            animation: scale-in 0.6s ease-out;
-          }
-          
-          .animate-fade-in-up {
-            animation: fade-in-up 0.8s ease-out;
-          }
-          
-          .animate-bounce-slow {
-            animation: bounce-slow 2s ease-in-out infinite;
-          }
-          
-          .animate-progress-bar {
-            animation: progress-bar 2s ease-in-out infinite;
-          }
-        `}</style>
       </div>
     );
   }
 
+  // Professional Animated Form
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4 pt-20 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1000ms'}}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '500ms'}}></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4 overflow-hidden relative">
+      {/* Animated Background */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-white/10 rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 2}s`
+            }}
+          />
+        ))}
       </div>
 
-      <div className="max-w-2xl w-full relative z-10">
+      <div className="w-full max-w-lg relative z-10">
         {/* Header */}
-        <div className="text-center mb-8 animate-fade-in">
-          <div className="flex items-center justify-center mb-4">
-            <div className="bg-gradient-to-r from-purple-500 to-blue-500 p-3 rounded-2xl shadow-lg">
-              <Bot className="w-8 h-8 text-white" />
-            </div>
-            <Sparkles className="w-6 h-6 text-yellow-400 ml-2 animate-pulse" />
+        <div className={`text-center mb-8 transform transition-all duration-1000 ${
+          formAnimated ? 'translate-y-0 opacity-100' : '-translate-y-10 opacity-0'
+        }`}>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg">
+            <Bot className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
-            Welcome to Job BotX
-          </h1>
-          <p className="text-white/80 text-lg">
-            Let our AI find your perfect job matches from LinkedIn
-          </p>
+          <h1 className="text-3xl font-bold text-white mb-2">Job BotX</h1>
+          <p className="text-white/70">AI-Powered Career Assistant</p>
         </div>
 
-        {/* Form */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl animate-slide-up">
+        {/* Form Card */}
+        <div className={`bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl transform transition-all duration-1000 delay-300 ${
+          formAnimated ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-10 opacity-0 scale-95'
+        }`}>
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 bg-red-500/20 border border-red-500/30 rounded-xl p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-red-200 text-sm">{error}</p>
+              </div>
+              <button
+                onClick={() => setError("")}
+                className="text-red-400 hover:text-red-300 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Name Field */}
-            <div className="space-y-2">
-              <label className="flex items-center text-white font-medium mb-2">
-                <User className="w-5 h-5 mr-2 text-purple-300" />
+            <div className={`space-y-2 transform transition-all duration-700 delay-500 ${
+              formAnimated ? 'translate-x-0 opacity-100' : '-translate-x-10 opacity-0'
+            }`}>
+              <label className="flex items-center text-white font-medium text-sm">
+                <User className={`w-4 h-4 mr-2 text-blue-400 transition-all duration-300 ${
+                  fieldFocus.name ? 'scale-125' : ''
+                }`} />
                 Full Name
               </label>
-              <div className="relative group">
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm"
-                  placeholder="Enter your full name"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-              </div>
+              <input
+                type="text"
+                placeholder="Enter your full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onFocus={() => setFieldFocus(prev => ({ ...prev, name: true }))}
+                onBlur={() => setFieldFocus(prev => ({ ...prev, name: false }))}
+                required
+                className={`w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:bg-white/15 ${
+                  name ? 'border-green-400' : ''
+                }`}
+              />
             </div>
 
             {/* Email Field */}
-            <div className="space-y-2">
-              <label className="flex items-center text-white font-medium mb-2">
-                <Mail className="w-5 h-5 mr-2 text-blue-300" />
+            <div className={`space-y-2 transform transition-all duration-700 delay-700 ${
+              formAnimated ? 'translate-x-0 opacity-100' : 'translate-x-10 opacity-0'
+            }`}>
+              <label className="flex items-center text-white font-medium text-sm">
+                <Mail className={`w-4 h-4 mr-2 text-green-400 transition-all duration-300 ${
+                  fieldFocus.email ? 'scale-125' : ''
+                }`} />
                 Email Address
               </label>
-              <div className="relative group">
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm"
-                  placeholder="Enter your email address"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-              </div>
+              <input
+                type="email"
+                placeholder="Enter your email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onFocus={() => setFieldFocus(prev => ({ ...prev, email: true }))}
+                onBlur={() => setFieldFocus(prev => ({ ...prev, email: false }))}
+                required
+                className={`w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 hover:bg-white/15 ${
+                  email ? 'border-green-400' : ''
+                }`}
+              />
             </div>
 
-            {/* Resume Upload */}
-            <div className="space-y-2">
-              <label className="flex items-center text-white font-medium mb-2">
-                <FileText className="w-5 h-5 mr-2 text-emerald-300" />
+            {/* File Upload */}
+            <div className={`space-y-2 transform transition-all duration-700 delay-900 ${
+              formAnimated ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+            }`}>
+              <label className="flex items-center text-white font-medium text-sm">
+                <FileText className={`w-4 h-4 mr-2 text-purple-400 transition-all duration-300 ${
+                  fieldFocus.file ? 'scale-125' : ''
+                }`} />
                 Resume Upload
               </label>
+              
               <div
-                className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
+                className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all duration-300 cursor-pointer ${
                   dragActive
-                    ? 'border-emerald-400 bg-emerald-500/10 scale-105'
-                    : 'border-white/30 bg-white/5 hover:bg-white/10 hover:border-white/40'
+                    ? "border-blue-400 bg-blue-500/10"
+                    : file
+                    ? "border-green-400 bg-green-500/10"
+                    : "border-white/30 hover:border-white/50 hover:bg-white/5"
                 }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                onMouseEnter={() => setFieldFocus(prev => ({ ...prev, file: true }))}
+                onMouseLeave={() => setFieldFocus(prev => ({ ...prev, file: false }))}
               >
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept=".pdf,.doc,.docx"
-                  onChange={(e) => handleFileChange(e.target.files[0])}
+                  onChange={handleFileSelect}
                   className="hidden"
+                  required
                 />
                 
-                {formData.resume ? (
-                  <div className="flex items-center justify-center space-x-3 animate-fade-in">
-                    <CheckCircle className="w-8 h-8 text-emerald-400" />
-                    <div className="text-left">
-                      <p className="text-white font-medium">{formData.resume.name}</p>
-                      <p className="text-white/60 text-sm">
-                        {(formData.resume.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, resume: null }))}
-                      className="ml-4 text-red-400 hover:text-red-300 text-sm underline"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ) : (
-                  <div>
-                    <Upload className="w-12 h-12 text-white/60 mx-auto mb-4 animate-bounce" />
-                    <p className="text-white/80 mb-2">
-                      Drag and drop your resume here, or{' '}
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="text-emerald-400 hover:text-emerald-300 underline font-medium transition-colors"
-                      >
-                        browse files
-                      </button>
-                    </p>
-                    <p className="text-white/50 text-sm">Supports PDF, DOC, DOCX (Max 10MB)</p>
-                  </div>
-                )}
+                <div className="flex flex-col items-center gap-3">
+                  {file ? (
+                    <>
+                      <CheckCircle className="w-12 h-12 text-green-400" />
+                      <div>
+                        <p className="text-green-300 font-medium">{file.name}</p>
+                        <p className="text-white/60 text-sm">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-12 h-12 text-white/60" />
+                      <div>
+                        <p className="text-white font-medium mb-1">
+                          Drop your resume here or click to browse
+                        </p>
+                        <p className="text-white/60 text-sm">
+                          Supports PDF, DOC, DOCX (Max 10MB)
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isSubmitting || !formData.name || !formData.email || !formData.resume}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg hover:shadow-purple-500/25"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Processing...</span>
-                </>
-              ) : (
-                <>
-                  <span>Start Job Search</span>
-                  <ArrowRight className="w-5 h-5" />
-                </>
-              )}
-            </button>
+            <div className={`transform transition-all duration-700 delay-1100 ${
+              formAnimated ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+            }`}>
+              <button
+                type="submit"
+                disabled={loading || !name || !email || !file}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Processing Resume...</span>
+                  </>
+                ) : (
+                  <>
+                    <Rocket className="w-5 h-5" />
+                    <span>Start AI Job Search</span>
+                  </>
+                )}
+              </button>
+            </div>
           </form>
 
-          {/* Info Cards */}
-          <div className="grid md:grid-cols-3 gap-4 mt-8">
-            <div className="bg-white/5 rounded-lg p-4 text-center hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
-              <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                <span className="text-purple-300 text-sm font-bold">1</span>
-              </div>
-              <p className="text-white/80 text-sm">AI analyzes your resume</p>
-            </div>
-            <div className="bg-white/5 rounded-lg p-4 text-center hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
-              <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                <span className="text-blue-300 text-sm font-bold">2</span>
-              </div>
-              <p className="text-white/80 text-sm">Scrapes LinkedIn jobs</p>
-            </div>
-            <div className="bg-white/5 rounded-lg p-4 text-center hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
-              <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                <span className="text-emerald-300 text-sm font-bold">3</span>
-              </div>
-              <p className="text-white/80 text-sm">Sends Excel report</p>
-            </div>
+          {/* Info Footer */}
+          <div className={`mt-6 text-center transform transition-all duration-700 delay-1300 ${
+            formAnimated ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'
+          }`}>
+            <p className="text-white/60 text-sm">
+              🤖 AI will analyze your resume and find matching jobs on LinkedIn
+            </p>
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(-20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes slide-up {
-          from { opacity: 0; transform: translateY(40px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.8s ease-out;
-        }
-        
-        .animate-slide-up {
-          animation: slide-up 0.8s ease-out 0.2s both;
-        }
-      `}</style>
     </div>
   );
-};
-
-export default JobBotXForm;
+}

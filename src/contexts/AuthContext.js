@@ -42,6 +42,20 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
+      
+      // Store user data in localStorage when user signs in
+      if (user) {
+        localStorage.setItem('authToken', user.accessToken || 'authenticated');
+        localStorage.setItem('userEmail', user.email || '');
+        localStorage.setItem('userName', user.displayName || user.email?.split('@')[0] || 'User');
+        localStorage.setItem('userPhoto', user.photoURL || '');
+      } else {
+        // Clear localStorage when user signs out
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userPhoto');
+      }
     });
 
     return () => unsubscribe();
