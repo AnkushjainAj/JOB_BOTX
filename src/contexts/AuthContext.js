@@ -20,9 +20,30 @@ export const AuthProvider = ({ children }) => {
   const signInWithGoogle = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      return result.user;
+      
+      // Ensure user data is properly set
+      if (result.user) {
+        setUser(result.user);
+        
+        // Store user data immediately
+        localStorage.setItem('authToken', result.user.accessToken || 'authenticated');
+        localStorage.setItem('userEmail', result.user.email || '');
+        localStorage.setItem('userName', result.user.displayName || result.user.email?.split('@')[0] || 'User');
+        localStorage.setItem('userPhoto', result.user.photoURL || '');
+        
+        return result.user;
+      } else {
+        throw new Error('No user data received from Google');
+      }
     } catch (error) {
       console.error('Error signing in with Google:', error);
+      
+      // Clear any partial auth data
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userPhoto');
+      
       throw error;
     }
   };

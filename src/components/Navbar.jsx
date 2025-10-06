@@ -15,18 +15,58 @@ const Navbar = () => {
         // If user is already logged in, redirect to internal job form
         window.location.href = '/job-form';
       } else {
+        // Show loading state
+        const button = document.querySelector('[data-get-started]');
+        if (button) {
+          button.textContent = 'Signing in...';
+          button.disabled = true;
+        }
+        
         // If not logged in, trigger Google authentication
         const userResult = await signInWithGoogle();
+        
         if (userResult) {
+          // Store user data immediately after successful auth
+          localStorage.setItem('authToken', userResult.accessToken || 'authenticated');
+          localStorage.setItem('userEmail', userResult.email || '');
+          localStorage.setItem('userName', userResult.displayName || userResult.email?.split('@')[0] || 'User');
+          
+          // Reset button state
+          if (button) {
+            button.textContent = 'Redirecting...';
+          }
+          
           // After successful authentication, redirect to internal job form
           setTimeout(() => {
             window.location.href = '/job-form';
-          }, 1000); // Small delay to ensure auth state is updated
+          }, 500); // Reduced delay for better UX
+        } else {
+          // Reset button if auth failed
+          if (button) {
+            button.textContent = 'Get Started';
+            button.disabled = false;
+          }
+          throw new Error('Authentication failed - no user returned');
         }
       }
     } catch (error) {
       console.error('Authentication error:', error);
-      alert('Authentication failed. Please try again.');
+      
+      // Reset button state
+      const button = document.querySelector('[data-get-started]');
+      if (button) {
+        button.textContent = 'Get Started';
+        button.disabled = false;
+      }
+      
+      // Show user-friendly error message
+      if (error.code === 'auth/popup-closed-by-user') {
+        alert('Sign-in was cancelled. Please try again.');
+      } else if (error.code === 'auth/popup-blocked') {
+        alert('Pop-up was blocked. Please allow pop-ups and try again.');
+      } else {
+        alert('Authentication failed. Please check your internet connection and try again.');
+      }
     }
   };
 
@@ -105,8 +145,9 @@ const Navbar = () => {
             {/* CTA Button - Hide on form page */}
             {pathname !== '/job-form' && (
               <button 
+                data-get-started
                 onClick={handleGetStarted}
-                className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-6 py-2.5 rounded-full transition-all duration-300 font-medium text-sm shadow-lg hover:shadow-primary-500/25"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-full transition-all duration-300 font-medium text-sm shadow-lg hover:shadow-blue-500/25"
               >
                 {user ? 'Apply Now' : 'Get Started'}
               </button>
@@ -186,11 +227,12 @@ const Navbar = () => {
               
               {pathname !== '/job-form' && (
                 <button 
+                  data-get-started
                   onClick={() => {
                     setIsMenuOpen(false);
                     handleGetStarted();
                   }}
-                  className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-6 py-2.5 rounded-full transition-all duration-300 font-medium text-sm shadow-lg hover:shadow-primary-500/25 w-fit"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-full transition-all duration-300 font-medium text-sm shadow-lg hover:shadow-blue-500/25 w-fit"
                 >
                   {user ? 'Apply Now' : 'Get Started'}
                 </button>
